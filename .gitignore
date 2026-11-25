@@ -14,18 +14,18 @@ build/
 Humming.xcodeproj/
 Humming.xcworkspace/
 
-# 本地签名材料（本仓库禁止提交）
-*.p12
+# 鏈湴绛惧悕鏉愭枡锛堟湰浠撳簱绂佹鎻愪氦锛?*.p12
 *.mobileprovision
 *.cer
 *.certSigningRequest
+*.key
+tmosNEW.key
 secrets/
 .credentials/
 
-# Go
-bin/
-hummingctl
-hummingctl.exe
+# Go锛堜粎蹇界暐浠撳簱鏍圭洰褰曠紪璇戜骇鐗╋紝涓嶈蹇界暐 cmd/hummingctl 婧愮爜鐩綍锛?bin/
+/hummingctl
+/hummingctl.exe
 dist/
 
 # IDE
@@ -34,10 +34,9 @@ dist/
 *.swp
 *~
 
-# 测试 / 覆盖率
-coverage.txt
+# 娴嬭瘯 / 瑕嗙洊鐜?coverage.txt
 *.out
 
-# 临时
+# 涓存椂
 tmp/
 .temp/
