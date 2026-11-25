@@ -14,7 +14,8 @@ build/
 Humming.xcodeproj/
 Humming.xcworkspace/
 
-# 鏈湴绛惧悕鏉愭枡锛堟湰浠撳簱绂佹鎻愪氦锛?*.p12
+# Local signing materials (never commit)
+*.p12
 *.mobileprovision
 *.cer
 *.certSigningRequest
@@ -23,7 +24,8 @@ tmosNEW.key
 secrets/
 .credentials/
 
-# Go锛堜粎蹇界暐浠撳簱鏍圭洰褰曠紪璇戜骇鐗╋紝涓嶈蹇界暐 cmd/hummingctl 婧愮爜鐩綍锛?bin/
+# Go build artifacts at repo root only (do NOT ignore cmd/hummingctl)
+bin/
 /hummingctl
 /hummingctl.exe
 dist/
@@ -34,9 +36,10 @@ dist/
 *.swp
 *~
 
-# 娴嬭瘯 / 瑕嗙洊鐜?coverage.txt
+# Coverage
+coverage.txt
 *.out
 
-# 涓存椂
+# Temp
 tmp/
 .temp/
