@@ -374,7 +374,7 @@ options:
 settings:
   base:
     SWIFT_VERSION: "5.0"
-    TARGETED_DEVICE_FAMILY: "1,2"
+    TARGETED_DEVICE_FAMILY: "1"
     IPHONEOS_DEPLOYMENT_TARGET: "{{.MinimumIOS}}"
     PRODUCT_BUNDLE_IDENTIFIER: {{.BundleID}}
     MARKETING_VERSION: "{{.Version}}"
@@ -384,6 +384,9 @@ settings:
     CODE_SIGNING_REQUIRED: "NO"
     CODE_SIGN_IDENTITY: ""
     ENABLE_BITCODE: "NO"
+    SUPPORTS_MACCATALYST: false
+    SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD: false
+    SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD: false
 targets:
   Humming:
     type: application
@@ -400,8 +403,11 @@ targets:
         INFOPLIST_FILE: App/Resources/Info.plist
         GENERATE_INFOPLIST_FILE: false
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
-        TARGETED_DEVICE_FAMILY: "1,2"
+        TARGETED_DEVICE_FAMILY: "1"
+        TARGETED_DEVICE_FAMILY[sdk=iphoneos*]: "1"
         SUPPORTS_MACCATALYST: false
+        SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD: false
+        SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD: false
         LD_RUNPATH_SEARCH_PATHS:
           - "$(inherited)"
           - "@executable_path/Frameworks"
@@ -460,6 +466,10 @@ const infoPlistTemplate = `<?xml version="1.0" encoding="UTF-8"?>
   <string>{{.Build}}</string>
   <key>LSRequiresIPhoneOS</key>
   <true/>
+  <key>UIDeviceFamily</key>
+  <array>
+    <integer>1</integer>
+  </array>
   <key>MinimumOSVersion</key>
   <string>{{.MinimumIOS}}</string>
   <key>UILaunchStoryboardName</key>
@@ -471,10 +481,6 @@ const infoPlistTemplate = `<?xml version="1.0" encoding="UTF-8"?>
   <key>UIViewControllerBasedStatusBarAppearance</key>
   <true/>
   <key>UISupportedInterfaceOrientations</key>
-  <array>
-{{.Orientations}}
-  </array>
-  <key>UISupportedInterfaceOrientations~ipad</key>
   <array>
 {{.Orientations}}
   </array>

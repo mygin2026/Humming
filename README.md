@@ -15,6 +15,7 @@
 | 主机白名单 | `app.cs5.top` |
 | Bridge Origin | `https://app.cs5.top` |
 | 最低系统 | iOS 15.0 |
+| 目标设备 | 仅 iPhone（不含 iPad） |
 | 架构 | arm64（真机） |
 
 ## 技术栈
