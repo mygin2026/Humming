@@ -84,20 +84,23 @@ go build -o hummingctl.exe ./cmd/hummingctl
 
 ## macOS / Xcode 本地打包
 
-在已安装 Xcode、Go、Homebrew 的 Mac 上：
+在已安装**官方 Xcode**（App Store → `/Applications/Xcode.app`）、Go、Homebrew 的 Mac 上：
 
 ```bash
 brew install go xcodegen
+# 若尚未选定开发者目录，执行一次：
+sudo xcode-select -s /Applications/Xcode.app
 chmod +x scripts/build-unsigned-ipa.sh
-./scripts/build-unsigned-ipa.sh
+./scripts/build-unsigned-ipa.sh --skip-test
 ```
+
+脚本默认使用 `/Applications/Xcode.app`，一般无需再传 `--xcode`。
 
 常用选项：
 
 ```bash
-./scripts/build-unsigned-ipa.sh --skip-test          # 跳过模拟器测试
-./scripts/build-unsigned-ipa.sh --clean              # 清理后全量重打包
-./scripts/build-unsigned-ipa.sh --xcode /Applications/Xcode.app
+./scripts/build-unsigned-ipa.sh --skip-test   # 跳过模拟器测试，更快出包
+./scripts/build-unsigned-ipa.sh --clean       # 清理后全量重打包
 ```
 
 产物：`dist/Humming-Unsigned.ipa` 与 `dist/Humming-Unsigned.ipa.sha256`（未签名，不可直接安装）。
