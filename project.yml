@@ -1,0 +1,70 @@
+# 本文件由 hummingctl generate 自动生成，禁止手工修改。
+name: Humming
+options:
+  bundleIdPrefix: com.glhpx
+  deploymentTarget:
+    iOS: "15.0"
+  createIntermediateGroups: true
+  groupSortPosition: top
+settings:
+  base:
+    SWIFT_VERSION: "5.0"
+    TARGETED_DEVICE_FAMILY: "1,2"
+    IPHONEOS_DEPLOYMENT_TARGET: "15.0"
+    PRODUCT_BUNDLE_IDENTIFIER: com.glhpx.humming
+    MARKETING_VERSION: "1.0.0"
+    CURRENT_PROJECT_VERSION: 1
+    DEVELOPMENT_TEAM: ""
+    CODE_SIGNING_ALLOWED: "NO"
+    CODE_SIGNING_REQUIRED: "NO"
+    CODE_SIGN_IDENTITY: ""
+    ENABLE_BITCODE: "NO"
+targets:
+  Humming:
+    type: application
+    platform: iOS
+    deploymentTarget: "15.0"
+    sources:
+      - path: App
+        excludes:
+          - "**/*.md"
+    settings:
+      base:
+        PRODUCT_NAME: Humming
+        PRODUCT_BUNDLE_IDENTIFIER: com.glhpx.humming
+        INFOPLIST_FILE: App/Resources/Info.plist
+        GENERATE_INFOPLIST_FILE: false
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        TARGETED_DEVICE_FAMILY: "1,2"
+        SUPPORTS_MACCATALYST: false
+        LD_RUNPATH_SEARCH_PATHS:
+          - "$(inherited)"
+          - "@executable_path/Frameworks"
+        SWIFT_ACTIVE_COMPILATION_CONDITIONS: "$(inherited)"
+  HummingTests:
+    type: bundle.unit-test
+    platform: iOS
+    deploymentTarget: "15.0"
+    sources:
+      - path: Tests
+    dependencies:
+      - target: Humming
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.glhpx.humming.tests
+        GENERATE_INFOPLIST_FILE: true
+        TEST_HOST: "$(BUILT_PRODUCTS_DIR)/Humming.app/Humming"
+        BUNDLE_LOADER: "$(TEST_HOST)"
+schemes:
+  Humming:
+    build:
+      targets:
+        Humming: all
+        HummingTests: [test]
+    test:
+      targets:
+        - HummingTests
+    run:
+      config: Debug
+    archive:
+      config: Release

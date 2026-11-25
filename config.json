@@ -1,0 +1,46 @@
+{
+  "app": {
+    "name": "Humming",
+    "bundle_id": "com.glhpx.humming",
+    "version": "1.0.0",
+    "build": 1,
+    "minimum_ios": "15.0"
+  },
+  "webview": {
+    "url": "https://app.cs5.top/",
+    "allowed_hosts": ["app.cs5.top"],
+    "fullscreen": true,
+    "hide_status_bar": false,
+    "background_color": "#FFFFFF",
+    "bounce": false,
+    "pull_to_refresh": false,
+    "swipe_navigation": true,
+    "javascript": true,
+    "persistent_storage": true,
+    "custom_user_agent": "",
+    "user_agent_suffix": "Humming/1.0.0",
+    "inline_media": true,
+    "media_autoplay": true,
+    "external_links": "safari"
+  },
+  "screen": {
+    "portrait": true,
+    "landscape": false
+  },
+  "network": {
+    "timeout_seconds": 30,
+    "auto_retry": true,
+    "retry_interval_seconds": 3,
+    "retry_max": 5
+  },
+  "bridge": {
+    "enabled": true,
+    "allowed_origins": ["https://app.cs5.top"]
+  },
+  "permissions": {
+    "camera": false,
+    "microphone": false,
+    "photo_library": false,
+    "location": false
+  }
+}

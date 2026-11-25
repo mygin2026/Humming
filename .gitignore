@@ -1,0 +1,43 @@
+# macOS / Xcode
+.DS_Store
+**/xcuserdata/
+*.xcuserstate
+*.xccheckout
+*.xcscmblueprint
+DerivedData/
+build/
+*.moved-aside
+*.hmap
+*.ipa
+*.dSYM.zip
+*.dSYM
+Humming.xcodeproj/
+Humming.xcworkspace/
+
+# 本地签名材料（本仓库禁止提交）
+*.p12
+*.mobileprovision
+*.cer
+*.certSigningRequest
+secrets/
+.credentials/
+
+# Go
+bin/
+hummingctl
+hummingctl.exe
+dist/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*~
+
+# 测试 / 覆盖率
+coverage.txt
+*.out
+
+# 临时
+tmp/
+.temp/

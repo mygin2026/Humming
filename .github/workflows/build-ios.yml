@@ -1,0 +1,193 @@
+name: Build iOS
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "App/**"
+      - "Tests/**"
+      - "config.json"
+      - "project.yml"
+      - "cmd/**"
+      - "internal/**"
+      - "go.mod"
+      - ".github/workflows/build-ios.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: build-ios-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build unsigned IPA
+    # 使用明确标签 macos-15（arm64）。如需更换，可改为 macos-26 / macos-latest。
+    # Xcode 通过 xcode-select 固定到 16.4（macos-15 镜像默认版本，待 CI 验证镜像是否仍包含）。
+    runs-on: macos-15
+    timeout-minutes: 60
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup Go
+        uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: Select Xcode
+        run: |
+          set -euo pipefail
+          if [ -d "/Applications/Xcode_16.4.app" ]; then
+            sudo xcode-select -s /Applications/Xcode_16.4.app
+          elif [ -d "/Applications/Xcode.app" ]; then
+            sudo xcode-select -s /Applications/Xcode.app
+          else
+            echo "未找到可用 Xcode" >&2
+            ls /Applications | grep -i xcode || true
+            exit 1
+          fi
+          echo "=== sw_vers ==="
+          sw_vers
+          echo "=== xcodebuild ==="
+          xcodebuild -version
+          echo "=== SDK ==="
+          xcodebuild -showsdks
+          echo "=== Swift ==="
+          swift --version
+
+      - name: Generate and validate
+        run: |
+          set -euo pipefail
+          export CGO_ENABLED=0
+          go run ./cmd/hummingctl generate
+          go run ./cmd/hummingctl validate
+
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: Generate Xcode project
+        run: xcodegen generate
+
+      - name: List schemes
+        run: |
+          set -euo pipefail
+          xcodebuild -list -project Humming.xcodeproj
+          xcodebuild -project Humming.xcodeproj -scheme Humming -showBuildSettings >/dev/null
+
+      - name: Run unit tests on Simulator
+        run: |
+          set -euo pipefail
+          DEST=""
+          # 通过 xcodebuild destinations / simctl 查询可用模拟器，不硬编码设备名。
+          LINE=$(xcodebuild -project Humming.xcodeproj -scheme Humming -showdestinations 2>/dev/null | \
+            grep 'platform:iOS Simulator' | grep 'id:' | head -n 1 || true)
+          if [ -n "${LINE}" ]; then
+            DEST=$(printf '%s' "${LINE}" | sed -E 's/.*platform:([^,}]+).*id:([^,}]+).*/platform=\1,id=\2/' | tr -d ' ')
+          else
+            UDID=$(xcrun simctl list devices available | grep -E 'iPhone' | grep -oE '[A-F0-9-]{36}' | head -n 1 || true)
+            if [ -n "${UDID}" ]; then
+              DEST="platform=iOS Simulator,id=${UDID}"
+            fi
+          fi
+          if [ -z "${DEST}" ]; then
+            echo "未找到可用 iOS Simulator" >&2
+            xcodebuild -project Humming.xcodeproj -scheme Humming -showdestinations || true
+            xcrun simctl list devices available || true
+            exit 1
+          fi
+          echo "使用测试目的地: ${DEST}"
+          xcodebuild test \
+            -project Humming.xcodeproj \
+            -scheme Humming \
+            -destination "${DEST}" \
+            -derivedDataPath build/test \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY=""
+
+      - name: Build Release arm64 device app
+        run: |
+          set -euo pipefail
+          xcodebuild -project Humming.xcodeproj -scheme Humming \
+            -configuration Release -sdk iphoneos \
+            -destination 'generic/platform=iOS' -derivedDataPath build \
+            ARCHS=arm64 ONLY_ACTIVE_ARCH=NO \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="" build
+
+      - name: Package unsigned IPA
+        run: |
+          set -euo pipefail
+          export CGO_ENABLED=0
+          APP_PATH="build/Build/Products/Release-iphoneos/Humming.app"
+          if [ ! -d "${APP_PATH}" ]; then
+            echo "未找到 ${APP_PATH}" >&2
+            find build -name "*.app" -type d || true
+            exit 1
+          fi
+          mkdir -p dist
+          go run ./cmd/hummingctl package --app "${APP_PATH}" --output dist/Humming-Unsigned.ipa
+
+      - name: Verify IPA structure and Mach-O
+        run: |
+          set -euo pipefail
+          APP_PATH="build/Build/Products/Release-iphoneos/Humming.app"
+          IPA="dist/Humming-Unsigned.ipa"
+
+          echo "=== Info.plist ==="
+          plutil -p "${APP_PATH}/Info.plist"
+
+          BUNDLE_ID=$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "${APP_PATH}/Info.plist")
+          EXEC=$(/usr/libexec/PlistBuddy -c 'Print :CFBundleExecutable' "${APP_PATH}/Info.plist")
+          VERSION=$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "${APP_PATH}/Info.plist")
+          BUILD=$(/usr/libexec/PlistBuddy -c 'Print :CFBundleVersion' "${APP_PATH}/Info.plist")
+
+          echo "Bundle ID: ${BUNDLE_ID}"
+          echo "Executable: ${EXEC}"
+          echo "Version: ${VERSION} (${BUILD})"
+
+          test "${BUNDLE_ID}" = "com.glhpx.humming"
+          test "${EXEC}" = "Humming"
+          test "${VERSION}" = "1.0.0"
+
+          BIN="${APP_PATH}/${EXEC}"
+          echo "=== lipo ==="
+          lipo -info "${BIN}"
+          lipo -info "${BIN}" | grep -q arm64
+
+          echo "=== vtool / otool platform ==="
+          if command -v vtool >/dev/null 2>&1; then
+            vtool -show-build "${BIN}" || vtool -show "${BIN}" || true
+          fi
+          otool -l "${BIN}" | grep -A3 LC_BUILD_VERSION || otool -l "${BIN}" | grep -A3 LC_VERSION_MIN_IPHONEOS || true
+
+          # 拒绝模拟器产物：platform 应为 iOS（非 iOS-simulator）
+          if otool -l "${BIN}" | grep -q "platform ios-simulator"; then
+            echo "错误：检测到模拟器平台产物" >&2
+            exit 1
+          fi
+
+          echo "=== IPA ZIP entries (head) ==="
+          unzip -l "${IPA}" | head -n 40
+          unzip -l "${IPA}" | grep -q "Payload/Humming.app/"
+          unzip -l "${IPA}" | grep -q "Payload/Humming.app/Info.plist"
+
+          test -f "${IPA}.sha256"
+          echo "=== SHA-256 ==="
+          cat "${IPA}.sha256"
+          shasum -a 256 -c "${IPA}.sha256"
+
+      - name: Upload IPA artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: Humming-Unsigned
+          path: |
+            dist/Humming-Unsigned.ipa
+            dist/Humming-Unsigned.ipa.sha256
+          if-no-files-found: error
+          retention-days: 14
