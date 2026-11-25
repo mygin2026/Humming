@@ -82,6 +82,26 @@ go build -o hummingctl.exe ./cmd/hummingctl
 | `validate` | 严格校验 JSON，并核对生成文件与源码完整性 |
 | `package --app <路径> --output <路径>` | 将 `.app` 打成 IPA，并写出 SHA-256 |
 
+## macOS / Xcode 本地打包
+
+在已安装 Xcode、Go、Homebrew 的 Mac 上：
+
+```bash
+brew install go xcodegen
+chmod +x scripts/build-unsigned-ipa.sh
+./scripts/build-unsigned-ipa.sh
+```
+
+常用选项：
+
+```bash
+./scripts/build-unsigned-ipa.sh --skip-test          # 跳过模拟器测试
+./scripts/build-unsigned-ipa.sh --clean              # 清理后全量重打包
+./scripts/build-unsigned-ipa.sh --xcode /Applications/Xcode.app
+```
+
+产物：`dist/Humming-Unsigned.ipa` 与 `dist/Humming-Unsigned.ipa.sha256`（未签名，不可直接安装）。
+
 ## 配置字段说明
 
 编辑根目录 `config.json`：
